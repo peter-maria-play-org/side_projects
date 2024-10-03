@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "feed-me"
+version = "0.1.0"
+description = ""
+authors = ["peterkaloyannis <peter.kaloyannis@outlook.com>"]
+readme = "README.md"
+packages = [{include = "feed_me"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "^2.1.1"
+pydantic = "^2.9.2"
+ruff = "^0.6.8"
+pytest = "^8.3.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
