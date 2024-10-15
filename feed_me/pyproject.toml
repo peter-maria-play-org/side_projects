@@ -1,0 +1,19 @@
+[project]
+name = "feed-me"
+version = "0.1.0"
+description = "Feed Me is an ultralightweight CLI task list system that abstracts away the decision making process."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.1.2",
+    "pydantic>=2.9.2",
+    "pytest>=8.3.3",
+    "ruff>=0.6.9",
+]
+
+[project.scripts]
+feed_me = "feed_me:cli.main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
