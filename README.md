@@ -1,11 +1,11 @@
 # `side_projects`
 
 This repository is a hodgepodge monorepo of small projects being 
-undertaken by Peter Kaloyannis and Maria Fernanda Navarro Castillo.
+undertaken by Peter Kaloyannis and Maria Navarro.
 
 ## Getting Started
 
-This repository is built upon the pupular [UV](https://github.com/astral-sh/uv) 
+This repository is built upon the popular [UV](https://github.com/astral-sh/uv) 
 python package manager. We also recommend running these projects within a
 linux environment (either WSL-2, VM, or native). For said environments, UV can
 be installed with the following

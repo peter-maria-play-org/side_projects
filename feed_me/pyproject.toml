@@ -1,24 +1,19 @@
-[tool.poetry]
+[project]
 name = "feed-me"
 version = "0.1.0"
-description = ""
-authors = ["peterkaloyannis <peter.kaloyannis@outlook.com>"]
+description = "Feed Me is an ultralightweight CLI task list system that abstracts away the decision making process."
 readme = "README.md"
-packages = [{include = "feed_me"}]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=2.1.2",
+    "pydantic>=2.9.2",
+    "pytest>=8.3.3",
+    "ruff>=0.6.9",
+]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-numpy = "^2.1.1"
-pydantic = "^2.9.2"
-ruff = "^0.6.8"
-pytest = "^8.3.3"
+[project.scripts]
+feed_me = "feed_me:cli.main"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.pytest.ini_options]
-addopts = "-ra -q"
-testpaths = [
-    "tests",
-]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

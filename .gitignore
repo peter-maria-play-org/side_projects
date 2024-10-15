@@ -1,10 +1,11 @@
 # General Cleanliness
 .vscode
+.pytest_cache
+__pycache__
 
 # Linters
 .ruff_cache
 
 # UV
 .venv
-.python-version
 *.egg-info
