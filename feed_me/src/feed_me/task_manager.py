@@ -25,7 +25,8 @@ class Priority(Enum):
     Enumerator representing priority levels.
 
     These values set the score of a task at the
-    deadline. They also form the basis of
+    deadline. They also form the basis of exponential
+    growth past the deadline.
     """
 
     LOW = 1
