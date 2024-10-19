@@ -2,7 +2,7 @@ name: Check PR Title and Issue Existence
 
 on:
   pull_request:
-    types: [opened, edited, reopened]
+    types: [opened, edited, reopened, synchronize]
 
 jobs:
   check-pr-title:
