@@ -1,4 +1,4 @@
-name: Check PR Title and Issue Existence
+name: Check PR Title and Issue Consistency
 
 on:
   pull_request:
@@ -8,33 +8,55 @@ jobs:
   check-pr-title:
     runs-on: ubuntu-latest
     steps:
-      - name: Check PR Title Format and Issue Existence
-        uses: actions/github-script@v7
+      - name: Check PR Title and Description Consistency
+        uses: actions/github-script@v6
         with:
           script: |
             const prTitle = context.payload.pull_request.title;
-            const regex = /^#(\d+): .+/;
-            const match = prTitle.match(regex);
+            const prBody = context.payload.pull_request.body;
 
-            if (!match) {
-              core.setFailed('❌ The PR title does not match the required format `#XXX: Description`.');
-            } else {
-              const issueNumber = parseInt(match[1], 10);
-              console.log(`Extracted issue number: #${issueNumber}`);
+            const titleRegex = /^#(\d+): .+/;
+            const titleMatch = prTitle.match(titleRegex);
 
-              try {
-                // Attempt to get the issue to check if it exists
-                await github.rest.issues.get({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: issueNumber,
-                });
-                console.log(`✅ Issue #${issueNumber} exists.`);
-              } catch (error) {
-                if (error.status === 404) {
-                  core.setFailed(`❌ Issue #${issueNumber} does not exist in this repository.`);
-                } else {
-                  core.setFailed(`❌ An error occurred while checking for issue #${issueNumber}: ${error.message}`);
-                }
+            // Check PR Title Format
+            if (!titleMatch) {
+              throw new Error('❌ The PR title does not match the required format `#XXX: Description`.');
+            }
+            console.log('✅ PR title format is correct.');
+
+            // Check PR Description Contains Issue Reference
+            const bodyRegex = /Closes\s+#(\d+)/i;
+            const bodyMatch = prBody.match(bodyRegex);
+
+            if (!bodyMatch) {
+              throw new Error('❌ The PR description does not contain `Closes #XXX` with an issue number.');
+            }
+            console.log('✅ PR description contains issue reference.');
+
+            const titleIssueNumber = parseInt(titleMatch[1], 10);
+            const bodyIssueNumber = parseInt(bodyMatch[1], 10);
+
+            console.log(`Extracted issue number from title: #${titleIssueNumber}`);
+            console.log(`Extracted issue number from description: #${bodyIssueNumber}`);
+
+            // Check if Issue Numbers Match
+            if (titleIssueNumber !== bodyIssueNumber) {
+              throw new Error(`❌ The issue number in the PR title (#${titleIssueNumber}) does not match the issue number in the PR description (#${bodyIssueNumber}).`);
+            }
+            console.log('✅ Issue numbers in title and description match.');
+
+            // Check if the Issue Exists
+            try {
+              await github.rest.issues.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: titleIssueNumber,
+              });
+              console.log(`✅ Issue #${titleIssueNumber} exists.`);
+            } catch (error) {
+              if (error.status === 404) {
+                throw new Error(`❌ Issue #${titleIssueNumber} does not exist in this repository.`);
+              } else {
+                throw new Error(`❌ An error occurred while checking for issue #${titleIssueNumber}: ${error.message}`);
               }
             }
