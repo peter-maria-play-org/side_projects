@@ -1,0 +1,40 @@
+name: Check PR Title and Issue Existence
+
+on:
+  pull_request:
+    types: [opened, edited, reopened]
+
+jobs:
+  check-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR Title Format and Issue Existence
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prTitle = context.payload.pull_request.title;
+            const regex = /^#(\d+): .+/;
+            const match = prTitle.match(regex);
+
+            if (!match) {
+              core.setFailed('❌ The PR title does not match the required format `#XXX: Description`.');
+            } else {
+              const issueNumber = parseInt(match[1], 10);
+              console.log(`Extracted issue number: #${issueNumber}`);
+
+              try {
+                // Attempt to get the issue to check if it exists
+                await github.rest.issues.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                });
+                console.log(`✅ Issue #${issueNumber} exists.`);
+              } catch (error) {
+                if (error.status === 404) {
+                  core.setFailed(`❌ Issue #${issueNumber} does not exist in this repository.`);
+                } else {
+                  core.setFailed(`❌ An error occurred while checking for issue #${issueNumber}: ${error.message}`);
+                }
+              }
+            }
