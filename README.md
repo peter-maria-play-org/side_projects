@@ -14,13 +14,21 @@ be installed with the following
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-UV is written in Rust, and the repository also might include instances of rust code. 
-Rust is easily installed using the following commands.
+## Development
+
+Development is done by first creating an issue describing a change that should be
+made. After that, a new branch is created for that issue. When work on this branch
+is complete, a pull request onto main is opened for review. The title of the PR
+must read as:
 
 ```
-curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
+#ISSUE-NUMBER: Description of PR.
 ```
+
+Where the issue number must link to a valid issue. PRs require at least one review 
+before they can be merged.
 
 ## Projects
 
-- `feed_me` is an ultralightweight CLI task list system that abstracts away the decision making process.
+- `feed_me` is an ultralightweight CLI task list system that abstracts away the 
+  decision making process.
