@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 from datetime import datetime, timedelta
-from feed_me.task_manager import *
+from feed_me.task_manager import Task, TaskMaster, Priority
 
 
 def test_Task():
@@ -12,7 +12,7 @@ def test_Task():
     # Create an invalid task with a deadline near
     # or before the creation time.
     with pytest.raises(ValidationError):
-        invalid_task = Task(
+        _ = Task(
             name="invalid_task",
             descriptiom="Here is a test task.",
             creation_time=datetime.now(),
