@@ -28,7 +28,16 @@ must read as:
 Where the issue number must link to a valid issue. PRs require at least one review 
 before they can be merged.
 
+This repository uses `pre-commit` to run some simple checks before commiting code is 
+possible. `pre-commit` is simple to setup using `uv` by running
+
+```
+uv tool install pre-commit
+uvx pre-commit install
+```
+
+This will install `pre-commit` into the git commit system.
+
 ## Projects
 
-- `feed_me` is an ultralightweight CLI task list system that abstracts away the 
-  decision making process.
+- `feed_me` is an ultralightweight CLI task list system that abstracts away the decision making process.
