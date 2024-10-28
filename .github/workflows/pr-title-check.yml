@@ -15,12 +15,12 @@ jobs:
             const prTitle = context.payload.pull_request.title;
             const prBody = context.payload.pull_request.body;
 
-            const titleRegex = /^#(\d+): .+/;
+            const titleRegex = /^(\d+): .+/;
             const titleMatch = prTitle.match(titleRegex);
 
             // Check PR Title Format
             if (!titleMatch) {
-              throw new Error('❌ The PR title does not match the required format `#XXX: Description`.');
+              throw new Error('❌ The PR title does not match the required format `ISSUE_NUMBER: Description`.');
             }
             console.log('✅ PR title format is correct.');
 
@@ -29,7 +29,7 @@ jobs:
             const bodyMatch = prBody.match(bodyRegex);
 
             if (!bodyMatch) {
-              throw new Error('❌ The PR description does not contain `Closes #XXX` with an issue number.');
+              throw new Error('❌ The PR description does not contain `Closes ISSUE_NUMBER` with an issue number.');
             }
             console.log('✅ PR description contains issue reference.');
 
