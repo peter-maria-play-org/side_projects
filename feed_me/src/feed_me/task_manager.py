@@ -4,7 +4,6 @@ the task management system.
 """
 
 # Imports
-import json
 import numpy as np
 from pydantic import BaseModel, model_validator
 from textwrap import indent
@@ -105,16 +104,14 @@ class Task(BaseModel):
         return np.clip(score, 0, MAX_COST)
 
     def pretty_print(
-        self, 
-        current_time: datetime = datetime.now(), 
-        base_indent: int = 0
+        self, current_time: datetime = datetime.now(), base_indent: int = 0
     ):
         """Pretty printing for a Task.
 
         Args:
-            current_time (datetime, optional): The current time for printing. 
+            current_time (datetime, optional): The current time for printing.
                 Defaults to datetime.now().
-            base_indent (int, optional): The indentation to use in the print. 
+            base_indent (int, optional): The indentation to use in the print.
                 Defaults to 0.
         """
 
@@ -168,27 +165,27 @@ class TaskMaster(BaseModel):
         return score_array
 
     def pretty_print(
-            self, 
-            current_time: datetime = datetime.now(),
-            base_indent: int = 0
+        self, current_time: datetime = datetime.now(), base_indent: int = 0
     ):
         """Pretty printing for a TaskMaster.
 
         Args:
-            current_time (datetime, optional): The current time for printing. 
+            current_time (datetime, optional): The current time for printing.
                 Defaults to datetime.now().
-            base_indent (int, optional): The indentation to use in the print. 
+            base_indent (int, optional): The indentation to use in the print.
                 Defaults to 0.
         """
 
         # Start by printing information about the task master.
         render_str = indent("TaskMaster:\n", base_indent * "\t")
-        render_str += indent(f"# of Tasks: {len(self.task_list)}", (base_indent+1) * "\t")
+        render_str += indent(
+            f"# of Tasks: {len(self.task_list)}", (base_indent + 1) * "\t"
+        )
         print(render_str)
 
         # Loop through and print the tasks.
         for task in self.task_list:
-            task.pretty_print(base_indent=base_indent+1, current_time=current_time)
+            task.pretty_print(base_indent=base_indent + 1, current_time=current_time)
 
     def serve_tasks(self, n_tasks: int, current_time: datetime) -> list[Task]:
         """
