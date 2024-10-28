@@ -22,7 +22,7 @@ is complete, a pull request onto main is opened for review. The title of the PR
 must read as:
 
 ```
-#ISSUE-NUMBER: Description of PR.
+ISSUE-NUMBER: Description of PR.
 ```
 
 Where the issue number must link to a valid issue. PRs require at least one review 
