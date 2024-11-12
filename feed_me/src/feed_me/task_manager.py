@@ -133,7 +133,8 @@ class Task(BaseModel):
         print(render_str)
 
 
-# class RecurringTask()
+# TODO (#5): Add a recurring task class
+# TODO     : class RecurringTask()
 
 
 class TaskMaster(BaseModel):
@@ -196,9 +197,6 @@ class TaskMaster(BaseModel):
         score_array = self.get_task_score_array(current_time=current_time)
 
         # Argsort to get the indices of the tasks with the highest score.
-        # TODO: This is a fixed cost approach to tasks, there is potential
-        # TODO: for a linear system solve to find the optimal set of tasks
-        # TODO: in a time window tha maximizes the score completion.
         max_sorted_indices = np.argsort(score_array)[::-1]
 
         # Loop through the sorted indices, returning the n_tasks
