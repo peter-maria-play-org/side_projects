@@ -5,6 +5,7 @@ description = "Feed Me is an ultralightweight CLI task list system that abstract
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "click>=8.1.7",
     "numpy>=2.1.2",
     "pydantic>=2.9.2",
     "pytest>=8.3.3",
