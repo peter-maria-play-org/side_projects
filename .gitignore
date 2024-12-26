@@ -9,3 +9,6 @@ __pycache__
 # UV
 .venv
 *.egg-info
+
+# FeedMe
+feed_me/data
