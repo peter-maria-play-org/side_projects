@@ -1,5 +1,6 @@
 import pytest
 import json
+import os
 from pydantic import ValidationError
 from datetime import datetime, timedelta
 from feed_me.task_manager import Task, TaskMaster, Priority
@@ -49,18 +50,18 @@ def test_TaskMaster():
     # priority with deadlines n hours away. These tasks
     # each have a score slope of 2/n. (PRIORITY 2 / n HOURS)
     current_time = datetime.now()
-    task_list = []
+    tasks = []
     n_tasks = 10
     for i in range(1, n_tasks + 1):
-        task_list.append(
+        tasks.append(
             Task(
                 name=f"task_{i}",
                 creation_time=current_time,
                 deadline=current_time + i * timedelta(hours=1),
             )
         )
-    task_master = TaskMaster(task_list=task_list)
-    assert task_master.task_list == task_list, "TaskMaster init failed."
+    task_master = TaskMaster(tasks=tasks)
+    assert task_master.tasks == tasks, "TaskMaster init failed."
 
     # Add a task to the bottom of the task list
     # This task has urgent priority, and happens in 1 hour.
@@ -72,20 +73,34 @@ def test_TaskMaster():
         priority=Priority.URGENT,
     )
     task_master.add_task(urgent_task)
-    assert task_master.task_list[-1] == urgent_task, "TaskMaster add_task failed."
+    assert task_master.tasks[-1] == urgent_task, "TaskMaster add_task failed."
 
     # Serve the top 3 tasks.
     # These should be:
-    # 1: UrgentTask (4*1=4)
-    # 2: Task 1 (2*1=2)
-    # 3: Task 2 (1*1=2)
-    expected_task_list = [urgent_task] + task_list[:2]
-    served_task_list = task_master.serve_tasks(
+    # 1: UrgentTask (4*1=4), Index 10
+    # 2: Task 1 (2*1=2), Index 0
+    # 3: Task 2 (2*0.5=1), Index 1
+    expected_tasks = {
+        10: urgent_task,
+        0: tasks[0],
+        1: tasks[1],
+    }
+    served_tasks = task_master.serve_tasks(
         3, current_time=current_time + timedelta(hours=1)
     )
-    assert served_task_list == expected_task_list, "TaskMaster task serving failed."
+    assert served_tasks == expected_tasks, "TaskMaster task serving failed."
 
-    # Test Serialization & Deserialization.
-    serialized_task_master_str = task_master.model_dump_json()
-    new_task_master = TaskMaster(**json.loads(serialized_task_master_str))
+    # Test marking a task as complete.
+    task_master.complete_task(0)
+
+    # Test pretty print
+    task_master.pretty_print(current_time)
+
+    # Test saving and loading,
+    fname = "task_manager.json"
+    task_master.save_as_json(fname)
+    new_task_master = TaskMaster.from_json(fname)
     assert new_task_master == task_master, "Failed serialization/deserialization."
+
+    # Clean up the file after the test.
+    os.remove(fname)
