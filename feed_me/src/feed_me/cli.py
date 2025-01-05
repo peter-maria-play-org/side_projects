@@ -139,7 +139,7 @@ def add(
     deadline_obj = datetime.fromisoformat(deadline)
 
     # Start time handling.
-    if start is "now":
+    if start == "now":
         start_obj = creation_time_obj
     else:
         start_obj = datetime.fromisoformat(start)
