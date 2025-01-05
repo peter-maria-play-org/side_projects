@@ -5,18 +5,14 @@ the task management system.
 
 # Imports
 import numpy as np
+import json
 from pydantic import BaseModel, model_validator
 from textwrap import indent
 from typing_extensions import Self
 from enum import Enum
-from datetime import datetime, timedelta
-
-# Maximum cost of a Task
-MAX_COST = 1e3
-
-# The smallest time between the creation time and deadline
-# of a task.
-SMALL_DT = timedelta(seconds=0.1)
+from datetime import datetime
+from pathlib import Path
+from . import INDENT, MAX_COST, SMALL_DT
 
 
 class Priority(Enum):
@@ -32,6 +28,15 @@ class Priority(Enum):
     MEDIUM = 2
     HIGH = 3
     URGENT = 4
+
+
+class Status(Enum):
+    """
+    Enumerator status of a task. It is either complete or not.
+    """
+
+    TODO = 1
+    COMPLETE = 2
 
 
 class Task(BaseModel):
@@ -51,6 +56,7 @@ class Task(BaseModel):
     description: str = ""
     creation_time: datetime = datetime.now()
     priority: Priority = Priority.MEDIUM
+    status: Status = Status.TODO
 
     @model_validator(mode="after")
     def validate_deadline(self) -> Self:
@@ -86,6 +92,10 @@ class Task(BaseModel):
                 when evaluating the task priority.
         """
 
+        # If a task is complete, the score is 0.
+        if self.status == Status.COMPLETE:
+            return 0
+
         # Decide if a task is overdue.
         if current_time >= self.deadline:
             # Overdue tasks experience exponential priority increases
@@ -115,20 +125,23 @@ class Task(BaseModel):
                 Defaults to 0.
         """
 
-        render_str = indent("Task:\n", base_indent * "\t")
-        render_str += indent(f"Name: {self.name}\n", (base_indent + 1) * "\t")
+        render_str = indent("Task:\n", base_indent * INDENT)
+        render_str += indent(f"Name: {self.name}\n", (base_indent + 1) * INDENT)
         render_str += indent(
-            f"Description: {self.description}\n", (base_indent + 1) * "\t"
+            f"Description: {self.description}\n", (base_indent + 1) * INDENT
         )
         render_str += indent(
-            f"Creation Time: {self.creation_time}\n", (base_indent + 1) * "\t"
+            f"Creation Time: {self.creation_time}\n", (base_indent + 1) * INDENT
         )
-        render_str += indent(f"Deadline: {self.deadline}\n", (base_indent + 1) * "\t")
+        render_str += indent(f"Deadline: {self.deadline}\n", (base_indent + 1) * INDENT)
         render_str += indent(
-            f"Priority: {self.priority.name}\n", (base_indent + 1) * "\t"
+            f"Priority: {self.priority.name}\n", (base_indent + 1) * INDENT
         )
         render_str += indent(
-            f"Score: {self.compute_score(current_time)}", (base_indent + 1) * "\t"
+            f"Status: {self.status.name}\n", (base_indent + 1) * INDENT
+        )
+        render_str += indent(
+            f"Score: {self.compute_score(current_time)}\n", (base_indent + 1) * INDENT
         )
         print(render_str)
 
@@ -140,17 +153,51 @@ class Task(BaseModel):
 class TaskMaster(BaseModel):
     """
     The TaskMaster is the main brain of the operation.
-    It is responsible for serving up the next task in
-    the list.
+    It is responsible for managing the different types of tasks
+    and organizing how they get done.
     """
 
-    task_list: list[Task]
+    tasks: list[Task]
+
+    @classmethod
+    def from_json(cls, path: Path):
+        """Load a TaskMaster from a file.
+
+        Args:
+            path (Path): The path to the json file.
+
+        Returns:
+            (TaskMaster): The loaded TaskMaster.
+        """
+
+        with open(path, "r") as file:
+            task_master_dict = json.load(file)
+        task_master = cls(**task_master_dict)
+        return task_master
+
+    def save_as_json(self, path: Path):
+        """Save a TaskMaster to a file.
+
+        Args:
+            path (Path): The path to save the json to.
+        """
+
+        # Dump task master as json converts everything to a
+        # writeable json string.
+        task_master_ugly_str = self.model_dump_json()
+
+        # Loading this back as a dict and using pretty print gives us
+        # a pretty print of it.
+        task_master_dict = json.loads(task_master_ugly_str)
+        task_master_json_str = json.dumps(task_master_dict, indent=4)
+        with open(path, "w") as file:
+            file.write(task_master_json_str)
 
     def add_task(self, task: Task):
         """
         Adds a task to the task list.
         """
-        self.task_list.append(task)
+        self.tasks.append(task)
 
     def get_task_score_array(self, current_time: datetime) -> np.ndarray:
         """
@@ -158,10 +205,10 @@ class TaskMaster(BaseModel):
         """
 
         # Init the memory
-        score_array = np.zeros(len(self.task_list))
+        score_array = np.zeros(len(self.tasks))
 
         # Loop through and fill it.
-        for i, task in enumerate(self.task_list):
+        for i, task in enumerate(self.tasks):
             score_array[i] = task.compute_score(current_time=current_time)
         return score_array
 
@@ -178,19 +225,20 @@ class TaskMaster(BaseModel):
         """
 
         # Start by printing information about the task master.
-        render_str = indent("TaskMaster:\n", base_indent * "\t")
+        render_str = indent("TaskMaster:\n", base_indent * INDENT)
         render_str += indent(
-            f"# of Tasks: {len(self.task_list)}", (base_indent + 1) * "\t"
+            f"# of Tasks: {len(self.tasks)}", (base_indent + 1) * INDENT
         )
         print(render_str)
 
         # Loop through and print the tasks.
-        for task in self.task_list:
+        print(indent("Tasks:\n", base_indent * INDENT))
+        for task in self.tasks:
             task.pretty_print(base_indent=base_indent + 1, current_time=current_time)
 
-    def serve_tasks(self, n_tasks: int, current_time: datetime) -> list[Task]:
+    def serve_tasks(self, n_tasks: int, current_time: datetime) -> dict[int, Task]:
         """
-        Server the n_task highest priority tasks.
+        Server the n_task highest priority tasks and their index.
         """
 
         # Get the score array of the tasks.
@@ -200,14 +248,42 @@ class TaskMaster(BaseModel):
         max_sorted_indices = np.argsort(score_array)[::-1]
 
         # Loop through the sorted indices, returning the n_tasks
-        # with the highest score
-        # We also restrict this to not overflow the task list.
+        # with the highest score.
+        #
+        # Note:
+        #   - We make use of the well ordered property of dicts to keep
+        #     the task priority order correct.
+        #   - We also restrict this to not overflow the task list.
         #! For Maria: Something in the below code is not
         #! great. It is bug prone.
         #! Hint: Think about what would happen if we modify
-        #! a task from the served_task_list.
-        served_task_list = []
-        for i in range(min(n_tasks, len(self.task_list))):
-            served_task_list.append(self.task_list[max_sorted_indices[i]])
+        #! a task from the served_tasks.
+        served_tasks = {}
+        for i in range(min(n_tasks, len(self.tasks))):
+            served_tasks[max_sorted_indices[i]] = self.tasks[max_sorted_indices[i]]
 
-        return served_task_list
+        return served_tasks
+
+    def complete_task(self, task_index: int):
+        """
+        Marks a task at a specified index in the task list as complete.
+
+        Args:
+            task_index (int): The index of the task to mark as complete.
+        """
+
+        # Check that the task_index is valid.
+        # Raise if not.
+        if task_index >= (n_tasks := len(self.tasks)):
+            raise IndexError(
+                f"Invalid task index {task_index} is larger than the max "
+                f"{n_tasks-1} index."
+            )
+
+        # Set the task to complete.
+        task_name = self.tasks[task_index].name
+        if self.tasks[task_index].status != Status.COMPLETE:
+            self.tasks[task_index].status = Status.COMPLETE
+            print(f"Task {task_name} is marked as complete.")
+        else:
+            print(f"Task {task_name} is already complete.")
