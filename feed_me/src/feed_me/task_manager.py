@@ -277,7 +277,7 @@ class TaskMaster(BaseModel):
         if task_index >= (n_tasks := len(self.tasks)):
             raise IndexError(
                 f"Invalid task index {task_index} is larger than the max "
-                f"{n_tasks} index."
+                f"{n_tasks-1} index."
             )
 
         # Set the task to complete.

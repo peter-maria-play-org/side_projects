@@ -9,7 +9,7 @@ from . import TASK_MASTER_PATH
 @click.group(invoke_without_command=False)
 @click.pass_context
 def main(ctx):
-    """feed_me is a simple program that provides a simple CLI interface
+    """feed_me is a program that provides a simple CLI interface
     for task management. It's goal is to provide the user with a small
     subset of tasks to focus on from their list. This is to protect users
     from the perils of task selection.
@@ -26,21 +26,18 @@ def main(ctx):
         # Print and startup.
         click.echo("First boot detected. Creating empty task_master.")
         task_master = TaskMaster(tasks=[])
-
-        # Check that the directory exists.
-        # If it does not exist, make it.
-        if not os.path.isdir(TASK_MASTER_PATH):
-            os.mkdir(path=TASK_MASTER_PATH)
-
-        task_master.save_as_json(
-            path=task_master_fpath,
-        )
     ctx.obj = task_master
 
     # When we close the CLI, save the task master.
     @ctx.call_on_close
     def shutdown():
         """This is the shutdown sequence for each command."""
+
+        # Check that the directory exists.
+        # If it does not exist, make it.
+        if not os.path.isdir(TASK_MASTER_PATH):
+            os.mkdir(path=TASK_MASTER_PATH)
+
         task_master.save_as_json(path=task_master_fpath)
 
 
@@ -48,9 +45,7 @@ def main(ctx):
 @click.argument("n_tasks", default=1)
 @click.pass_context
 def serve(ctx, n_tasks: int):
-    """Serve serves a prescribed number of tasks based on the
-    current time.
-    """
+    """Serves tasks based on the current time."""
 
     # Get the task master from the context
     task_master = ctx.obj
