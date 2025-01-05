@@ -12,13 +12,14 @@ def test_Task():
     """
 
     # Create an invalid task with a deadline near
-    # or before the creation time.
+    # or before the start time.
     with pytest.raises(ValidationError):
         _ = Task(
             name="invalid_task",
             descriptiom="Here is a test task.",
             creation_time=datetime.now(),
-            deadline=datetime.now(),
+            start=datetime.now() + timedelta(hours=1),
+            deadline=datetime.now() + timedelta(hours=1),
         )
 
     # Create a valid task that is due tomorrow.

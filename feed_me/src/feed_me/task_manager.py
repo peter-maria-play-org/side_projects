@@ -52,22 +52,23 @@ class Task(BaseModel):
     """
 
     name: str
-    deadline: datetime
     description: str = ""
     creation_time: datetime = datetime.now()
+    start: datetime = datetime.now()
+    deadline: datetime
     priority: Priority = Priority.MEDIUM
     status: Status = Status.TODO
 
     @model_validator(mode="after")
     def validate_deadline(self) -> Self:
         """
-        Ensures that the deadline is after the creation_date.
+        Ensures that the deadline is after the start_date.
 
         Args:
             self: The class reference.
 
         Raises:
-            ValueError: If the deadline is not after the creation_date.
+            ValueError: If the deadline is not after the start_date.
 
         Returns:
             self: The class reference.
@@ -75,8 +76,8 @@ class Task(BaseModel):
 
         # For safety, we add a SMALL_DT here to make sure we don't have
         # numerical stability issues later.
-        if self.deadline <= self.creation_time + SMALL_DT:
-            raise ValueError("The deadline must be after the creation date.")
+        if self.deadline <= self.start + SMALL_DT:
+            raise ValueError("The deadline must be after the start date.")
         return self
 
     def compute_score(self, current_time: datetime) -> float:
@@ -106,8 +107,8 @@ class Task(BaseModel):
             return np.clip(score, 0, MAX_COST)
 
         # Linear Interpolation for non-overdue tasks
-        total_duration = (self.deadline - self.creation_time).total_seconds()
-        elapsed_duration = (current_time - self.creation_time).total_seconds()
+        total_duration = (self.deadline - self.start).total_seconds()
+        elapsed_duration = (current_time - self.start).total_seconds()
 
         # Division by 0 protection is done by construction
         score = self.priority.value * (elapsed_duration / total_duration)
@@ -132,6 +133,9 @@ class Task(BaseModel):
         )
         render_str += indent(
             f"Creation Time: {self.creation_time}\n", (base_indent + 1) * INDENT
+        )
+        render_str += indent(
+            f"Start Time: {self.start}\n", (base_indent + 1) * INDENT
         )
         render_str += indent(f"Deadline: {self.deadline}\n", (base_indent + 1) * INDENT)
         render_str += indent(

@@ -110,6 +110,12 @@ def complete(ctx, task_index: int):
     help="The task priority level.",
 )
 @click.option(
+    "--start",
+    default="now",
+    prompt="Start Time [YYYY-MM-DD]",
+    help="The start time of the task in the ISO8601 format.",
+)
+@click.option(
     "--deadline",
     prompt="Deadline [YYYY-MM-DD]",
     help="The deadline of the task in the ISO8601 format.",
@@ -120,15 +126,23 @@ def add(
     name: str,
     description: str,
     priority: str,
+    start: str,
     deadline: str,
 ):
     """Adds a task to the task_master."""
 
-    # Get the task master from the context
+    # Get the task master from the context.
     task_master = ctx.obj
 
-    # Create the datetime.
+    # Datetime initialization.
+    creation_time_obj = datetime.now()
     deadline_obj = datetime.fromisoformat(deadline)
+
+    # Start time handling.
+    if start is "now":
+        start_obj = creation_time_obj
+    else:
+        start_obj = datetime.fromisoformat(start)
 
     # Create a task from the CLI.
     # If the task is invalid, catch the error and print it out.
@@ -137,14 +151,15 @@ def add(
             name=name,
             description=description,
             priority=Priority[priority.upper()],
-            creation_time=datetime.now(),
+            creation_time=creation_time_obj,
+            start=start_obj,
             deadline=deadline_obj,
         )
     except ValidationError as error:
         true_error = error.errors()[0]
         raise click.ClickException(true_error["msg"])
 
-    # Add to the task master
+    # Add to the task master.
     task_master.add_task(task=task)
 
 
