@@ -46,9 +46,14 @@ class Task(BaseModel):
     Tasks are born with a score of 0, meaning they
     have the minimum attributable score in the queue.
 
+    The start of the score computation occurs at the
+    start time.
+
     The score of a task linearly increases to the value
     of the priority. This ensures high priority tasks
     are served up earlier than low priority tasks.
+
+    Completed tasks have a 0 score.
     """
 
     name: str
@@ -134,9 +139,7 @@ class Task(BaseModel):
         render_str += indent(
             f"Creation Time: {self.creation_time}\n", (base_indent + 1) * INDENT
         )
-        render_str += indent(
-            f"Start Time: {self.start}\n", (base_indent + 1) * INDENT
-        )
+        render_str += indent(f"Start Time: {self.start}\n", (base_indent + 1) * INDENT)
         render_str += indent(f"Deadline: {self.deadline}\n", (base_indent + 1) * INDENT)
         render_str += indent(
             f"Priority: {self.priority.name}\n", (base_indent + 1) * INDENT
