@@ -108,7 +108,7 @@ class Task(BaseModel):
             overdue_duration = (current_time - self.deadline).total_seconds() / 3600
             score = self.priority.value * (1 + overdue_duration) ** self.priority.value
 
-            # Clamp the scpre to the maximum value to prevent numerical issues.
+            # Clamp the score to the maximum value to prevent numerical issues.
             return np.clip(score, 0, MAX_COST)
 
         # Linear Interpolation for non-overdue tasks
@@ -116,7 +116,9 @@ class Task(BaseModel):
         elapsed_duration = (current_time - self.start).total_seconds()
 
         # Division by 0 protection is done by construction
+        # Initial score could be negative if the start time is after the current time, but we clip it after.
         score = self.priority.value * (elapsed_duration / total_duration)
+        # Constrain the score within the range [0, MAX_COST] to prevent numerical issues.
         return np.clip(score, 0, MAX_COST)
 
     def pretty_print(
