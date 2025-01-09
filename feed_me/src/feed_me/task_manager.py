@@ -46,28 +46,34 @@ class Task(BaseModel):
     Tasks are born with a score of 0, meaning they
     have the minimum attributable score in the queue.
 
+    The start of the score computation occurs at the
+    start time.
+
     The score of a task linearly increases to the value
     of the priority. This ensures high priority tasks
     are served up earlier than low priority tasks.
+
+    Completed tasks have a 0 score.
     """
 
     name: str
-    deadline: datetime
     description: str = ""
     creation_time: datetime = datetime.now()
+    start: datetime = datetime.now()
+    deadline: datetime
     priority: Priority = Priority.MEDIUM
     status: Status = Status.TODO
 
     @model_validator(mode="after")
     def validate_deadline(self) -> Self:
         """
-        Ensures that the deadline is after the creation_date.
+        Ensures that the deadline is after the start_date.
 
         Args:
             self: The class reference.
 
         Raises:
-            ValueError: If the deadline is not after the creation_date.
+            ValueError: If the deadline is not after the start_date.
 
         Returns:
             self: The class reference.
@@ -75,8 +81,8 @@ class Task(BaseModel):
 
         # For safety, we add a SMALL_DT here to make sure we don't have
         # numerical stability issues later.
-        if self.deadline <= self.creation_time + SMALL_DT:
-            raise ValueError("The deadline must be after the creation date.")
+        if self.deadline <= self.start + SMALL_DT:
+            raise ValueError("The deadline must be after the start date.")
         return self
 
     def compute_score(self, current_time: datetime) -> float:
@@ -102,15 +108,17 @@ class Task(BaseModel):
             overdue_duration = (current_time - self.deadline).total_seconds() / 3600
             score = self.priority.value * (1 + overdue_duration) ** self.priority.value
 
-            # Clamp the scpre to the maximum value to prevent numerical issues.
+            # Clamp the score to the maximum value to prevent numerical issues.
             return np.clip(score, 0, MAX_COST)
 
         # Linear Interpolation for non-overdue tasks
-        total_duration = (self.deadline - self.creation_time).total_seconds()
-        elapsed_duration = (current_time - self.creation_time).total_seconds()
+        total_duration = (self.deadline - self.start).total_seconds()
+        elapsed_duration = (current_time - self.start).total_seconds()
 
         # Division by 0 protection is done by construction
+        # Initial score could be negative if the start time is after the current time, but we clip it after.
         score = self.priority.value * (elapsed_duration / total_duration)
+        # Constrain the score within the range [0, MAX_COST] to prevent numerical issues.
         return np.clip(score, 0, MAX_COST)
 
     def pretty_print(
@@ -133,6 +141,7 @@ class Task(BaseModel):
         render_str += indent(
             f"Creation Time: {self.creation_time}\n", (base_indent + 1) * INDENT
         )
+        render_str += indent(f"Start Time: {self.start}\n", (base_indent + 1) * INDENT)
         render_str += indent(f"Deadline: {self.deadline}\n", (base_indent + 1) * INDENT)
         render_str += indent(
             f"Priority: {self.priority.name}\n", (base_indent + 1) * INDENT
