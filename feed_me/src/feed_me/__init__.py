@@ -12,4 +12,4 @@ MAX_COST = 1e3
 SMALL_DT = timedelta(seconds=0.1)
 
 # The location to save the task master to.
-TASK_MASTER_PATH = Path("./data/")
+TASK_MASTER_PATH = Path.home() / ".feed_me"
