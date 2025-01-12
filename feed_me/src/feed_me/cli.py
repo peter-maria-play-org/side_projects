@@ -50,20 +50,17 @@ def serve(ctx, n_tasks: int):
     # Get the task master from the context
     task_master = ctx.obj
 
-    # If the task master does not have enough tasks,
-    # print a friendly note.
-    if (total_tasks := len(task_master.tasks)) < n_tasks:
-        click.echo(
-            "Task master does not have enough tasks in the task list "
-            f"to serve {n_tasks}. Has {total_tasks} tasks."
-        )
-
     # Get the current time and serve the tasks.
     now = datetime.now()
     served_tasks = task_master.serve_tasks(
         n_tasks=n_tasks,
         current_time=now,
     )
+    if n_tasks > len(served_tasks):
+        click.echo(
+            "Task master does not have enough TODO tasks in the task list "
+            f"to serve {n_tasks}."
+        )
 
     # Print the served tasks out
     for index, task in served_tasks.items():
