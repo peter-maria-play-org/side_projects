@@ -1,6 +1,20 @@
+# ruff: noqa: E402
+# Disable E402 to allow the sequential importing operation
+# for this test.
 from datetime import datetime, timedelta
+from pathlib import Path
 from click.testing import CliRunner
+
+# fmt: off
+# Reset the task master path to be local.
+# Must be done before importing the CLI
+# to make the path apply when main is imported.
+import feed_me
+feed_me.TASK_MASTER_PATH = Path(".")
+
+# Import the CLI.
 from feed_me.cli import main
+# fmt: on
 
 
 def test_cli_main():
