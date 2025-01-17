@@ -3,7 +3,7 @@ import json
 import os
 from pydantic import ValidationError
 from datetime import datetime, timedelta
-from feed_me.task_manager import Task, TaskMaster, Priority
+from feed_me.task_manager import Task, TaskMaster, Priority, Status
 
 
 def test_Task():
@@ -93,6 +93,23 @@ def test_TaskMaster():
 
     # Test marking a task as complete.
     task_master.complete_task(0)
+    assert (
+        task_master.tasks[0].status == Status.COMPLETE
+    ), "Task master completion failed."
+
+    # Test that task master does not serve completed tasks.
+    # For this, mark Task 1-n_tasks as complete, which leaves
+    # only the urgent task. Then serve 3, should return just
+    # the urgent task.
+    for i in range(n_tasks):
+        task_master.complete_task(i)
+    expected_tasks_completed = {10: urgent_task}
+    served_tasks_completed = task_master.serve_tasks(
+        3, current_time=current_time + timedelta(hours=1)
+    )
+    assert (
+        served_tasks_completed == expected_tasks_completed
+    ), "TaskMaster task serving with completion failed."
 
     # Test pretty print
     task_master.pretty_print(current_time)

@@ -247,7 +247,7 @@ class TaskMaster(BaseModel):
 
     def serve_tasks(self, n_tasks: int, current_time: datetime) -> dict[int, Task]:
         """
-        Server the n_task highest priority tasks and their index.
+        Server the n_task highest score TODO tasks and their index.
         """
 
         # Get the score array of the tasks.
@@ -263,13 +263,16 @@ class TaskMaster(BaseModel):
         #   - We make use of the well ordered property of dicts to keep
         #     the task priority order correct.
         #   - We also restrict this to not overflow the task list.
+        #   - If the argsort returns completed tasks, we dont serve them.
         #! For Maria: Something in the below code is not
         #! great. It is bug prone.
         #! Hint: Think about what would happen if we modify
         #! a task from the served_tasks.
         served_tasks = {}
         for i in range(min(n_tasks, len(self.tasks))):
-            served_tasks[max_sorted_indices[i]] = self.tasks[max_sorted_indices[i]]
+            task = self.tasks[max_sorted_indices[i]]
+            if task.status == Status.TODO:
+                served_tasks[max_sorted_indices[i]] = self.tasks[max_sorted_indices[i]]
 
         return served_tasks
 
