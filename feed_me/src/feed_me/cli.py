@@ -96,6 +96,7 @@ def complete(ctx, task_index: int):
 @click.option(
     "--description",
     prompt="Description",
+    default="",
     type=click.STRING,
     help="The description of the task.",
 )
