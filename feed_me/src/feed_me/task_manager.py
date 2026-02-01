@@ -102,23 +102,22 @@ class Task(BaseModel):
         if self.status == Status.COMPLETE:
             return 0
 
-        # Decide if a task is overdue.
-        if current_time >= self.deadline:
-            # Overdue tasks experience exponential priority increases
-            overdue_duration = (current_time - self.deadline).total_seconds() / 3600
-            score = self.priority.value * (1 + overdue_duration) ** self.priority.value
-
-            # Clamp the score to the maximum value to prevent numerical issues.
-            return np.clip(score, 0, MAX_COST)
-
-        # Linear Interpolation for non-overdue tasks
+        # Compute dt for this task.
+        # Note that start and deadline are EPS appart by construction
+        # and so DIV0 should be impossible here.
         total_duration = (self.deadline - self.start).total_seconds()
         elapsed_duration = (current_time - self.start).total_seconds()
+        dt = elapsed_duration / total_duration
 
-        # Division by 0 protection is done by construction
-        # Initial score could be negative if the start time is after the current time, but we clip it after.
-        score = self.priority.value * (elapsed_duration / total_duration)
-        # Constrain the score within the range [0, MAX_COST] to prevent numerical issues.
+        # If a task is not overdue, grow linearly.
+        if dt < 1:
+            score = self.priority.value * dt
+        # If a task is overdue, grow exponentially.
+        else:
+            score = self.priority.value * np.exp(dt-1)
+
+        # Constrain the score within the range [0, MAX_COST] 
+        # to prevent numerical issues from the EXP or Div0.
         return np.clip(score, 0, MAX_COST)
 
     def pretty_print(
