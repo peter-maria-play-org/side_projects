@@ -6,12 +6,16 @@ from pydantic import ValidationError
 from datetime import datetime, timedelta
 from feed_me.task_manager import Task, TaskMaster, Priority, Status
 
-@pytest.mark.parametrize("priority", [
-    (Priority.LOW),
-    (Priority.MEDIUM),
-    (Priority.HIGH),
-    (Priority.URGENT),
-])
+
+@pytest.mark.parametrize(
+    "priority",
+    [
+        (Priority.LOW),
+        (Priority.MEDIUM),
+        (Priority.HIGH),
+        (Priority.URGENT),
+    ],
+)
 def test_Task(priority: Priority):
     """
     Tests some functionality of the Task class.
@@ -62,18 +66,23 @@ def test_Task(priority: Priority):
     assert valid_task.compute_score(now_time) == 0
 
     # At the half way point, the score returns priority/2
-    assert valid_task.compute_score(now_time + timedelta(hours=0.5)) == priority_value/2
+    assert (
+        valid_task.compute_score(now_time + timedelta(hours=0.5)) == priority_value / 2
+    )
 
     # At the deadline, the score returns priority.
     assert valid_task.compute_score(now_time + timedelta(hours=1)) == priority_value
 
     # When a task is overdue, it has exponential score so
     # that dt returns e*priority.
-    assert valid_task.compute_score(now_time + timedelta(hours=2)) == np.e*priority_value
+    assert (
+        valid_task.compute_score(now_time + timedelta(hours=2)) == np.e * priority_value
+    )
 
     # When a task is complete, it returns a score of 0.
     valid_task.status = Status.COMPLETE
     assert valid_task.compute_score(now_time + timedelta(hours=2)) == 0
+
 
 def test_TaskMaster():
     """

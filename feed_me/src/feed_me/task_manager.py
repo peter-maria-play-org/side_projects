@@ -114,9 +114,9 @@ class Task(BaseModel):
             score = self.priority.value * dt
         # If a task is overdue, grow exponentially.
         else:
-            score = self.priority.value * np.exp(dt-1)
+            score = self.priority.value * np.exp(dt - 1)
 
-        # Constrain the score within the range [0, MAX_COST] 
+        # Constrain the score within the range [0, MAX_COST]
         # to prevent numerical issues from the EXP or Div0.
         return np.clip(score, 0, MAX_COST)
 
