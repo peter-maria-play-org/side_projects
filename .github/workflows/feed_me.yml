@@ -4,7 +4,7 @@ on:
   push:
 
 jobs:
-  feeed_me_pytests:
+  feed_me_pytests:
     name: Pytests for feed_me
     runs-on: ubuntu-latest
     defaults:
@@ -21,4 +21,4 @@ jobs:
         run: uv sync --locked --all-extras --dev;
 
       - name: Run tests
-        run: uv run pytest tests
+        run: uv run pytest
