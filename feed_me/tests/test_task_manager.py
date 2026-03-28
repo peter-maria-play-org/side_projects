@@ -1,45 +1,87 @@
 import pytest
 import json
 import os
+import numpy as np
 from pydantic import ValidationError
 from datetime import datetime, timedelta
 from feed_me.task_manager import Task, TaskMaster, Priority, Status
 
 
-def test_Task():
+@pytest.mark.parametrize(
+    "priority",
+    [
+        (Priority.LOW),
+        (Priority.MEDIUM),
+        (Priority.HIGH),
+        (Priority.URGENT),
+    ],
+)
+def test_Task(priority: Priority):
     """
     Tests some functionality of the Task class.
     """
 
+    # Exec Time
+    now_time = datetime.now()
+
+    # Get the priority value for evaluating tests
+    # later.
+    priority_value = priority.value
+
     # Create an invalid task with a deadline near
-    # or before the start time.
+    # matching the start time.
     with pytest.raises(ValidationError):
         _ = Task(
             name="invalid_task",
             descriptiom="Here is a test task.",
-            creation_time=datetime.now(),
-            start=datetime.now() + timedelta(hours=1),
-            deadline=datetime.now() + timedelta(hours=1),
+            priority=priority,
+            creation_time=now_time,
+            start=now_time,
+            deadline=now_time,
         )
 
     # Create a valid task that is due tomorrow.
     valid_task = Task(
         name="valid_task",
         descriptiom="Here is a test task.",
-        deadline=datetime.now() + timedelta(days=1),
+        priority=priority,
+        creation_time=now_time,
+        start=now_time,
+        deadline=now_time + timedelta(hours=1),
     )
 
     # Test the pretty print
     valid_task.pretty_print()
-
-    # TODO (#6): Test the score
 
     # Test Serialization & Deserialization.
     serialized_task_str = valid_task.model_dump_json()
     new_task = Task(**json.loads(serialized_task_str))
     assert new_task == valid_task, "Failed serialization/deserialization."
 
-    return
+    # Test Score evaluation.
+    # Before the start time, the score returns 0.
+    assert valid_task.compute_score(now_time - timedelta(hours=1)) == 0
+
+    # At the start time, the score returns 0.
+    assert valid_task.compute_score(now_time) == 0
+
+    # At the half way point, the score returns priority/2
+    assert (
+        valid_task.compute_score(now_time + timedelta(hours=0.5)) == priority_value / 2
+    )
+
+    # At the deadline, the score returns priority.
+    assert valid_task.compute_score(now_time + timedelta(hours=1)) == priority_value
+
+    # When a task is overdue, it has exponential score so
+    # that dt returns e*priority.
+    assert (
+        valid_task.compute_score(now_time + timedelta(hours=2)) == np.e * priority_value
+    )
+
+    # When a task is complete, it returns a score of 0.
+    valid_task.status = Status.COMPLETE
+    assert valid_task.compute_score(now_time + timedelta(hours=2)) == 0
 
 
 def test_TaskMaster():
